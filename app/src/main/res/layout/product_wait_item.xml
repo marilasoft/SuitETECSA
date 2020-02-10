@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="16dp"
+    android:orientation="vertical"
+    app:cardCornerRadius="5dp"
+    app:cardElevation="8dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:id="@+id/ll_title"
+            android:layout_width="200dp"
+            android:layout_height="24sp"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginBottom="4dp"
+            android:background="@drawable/rounded_wait"
+            android:orientation="vertical"
+            android:padding="0dp">
+
+            <View
+                android:id="@+id/v1"
+                android:layout_width="50dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="-30dp"
+                android:layout_marginLeft="-30dp"
+                android:layout_marginEnd="-30dp"
+                android:layout_marginRight="-30dp"
+                android:background="@drawable/degradado_de_espera" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_description_one"
+            android:layout_width="230dp"
+            android:layout_height="14sp"
+            android:layout_below="@id/ll_title"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginBottom="4dp"
+            android:background="@drawable/rounded_wait"
+            android:orientation="vertical"
+            android:padding="0dp">
+
+            <View
+                android:id="@+id/v2"
+                android:layout_width="50dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="-30dp"
+                android:layout_marginLeft="-30dp"
+                android:layout_marginEnd="-30dp"
+                android:layout_marginRight="-30dp"
+                android:background="@drawable/degradado_de_espera" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_description_two"
+            android:layout_width="190dp"
+            android:layout_height="14sp"
+            android:layout_below="@id/ll_description_one"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginBottom="4dp"
+            android:background="@drawable/rounded_wait"
+            android:orientation="vertical"
+            android:padding="0dp">
+
+            <View
+                android:id="@+id/v3"
+                android:layout_width="50dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="-30dp"
+                android:layout_marginLeft="-30dp"
+                android:layout_marginEnd="-30dp"
+                android:layout_marginRight="-30dp"
+                android:background="@drawable/degradado_de_espera" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_price"
+            android:layout_width="70dp"
+            android:layout_height="14sp"
+            android:layout_below="@id/ll_description_two"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginBottom="4dp"
+            android:background="@drawable/rounded_wait"
+            android:orientation="vertical"
+            android:padding="0dp">
+
+            <View
+                android:id="@+id/v4"
+                android:layout_width="50dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="-30dp"
+                android:layout_marginLeft="-30dp"
+                android:layout_marginEnd="-30dp"
+                android:layout_marginRight="-30dp"
+                android:background="@drawable/degradado_de_espera" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_most_info"
+            android:layout_width="70dp"
+            android:layout_height="14sp"
+            android:layout_below="@id/ll_price"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginBottom="4dp"
+            android:background="@drawable/rounded_wait"
+            android:orientation="vertical"
+            android:padding="0dp">
+
+            <View
+                android:id="@+id/v5"
+                android:layout_width="50dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="-30dp"
+                android:layout_marginLeft="-30dp"
+                android:layout_marginEnd="-30dp"
+                android:layout_marginRight="-30dp"
+                android:background="@drawable/degradado_de_espera" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_buy2"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/ll_most_info"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/rounded_button"
+            android:text="@string/buy"
+            android:textAllCaps="false"
+            android:textColor="@color/colorAccent" />
+    </RelativeLayout>
+</androidx.cardview.widget.CardView>
