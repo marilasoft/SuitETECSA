@@ -22,7 +22,6 @@
             android:layout_marginEnd="16dp"
             android:layout_marginRight="16dp"
             android:layout_marginBottom="4dp"
-            android:text="Bolsa Correo"
             android:textSize="24sp" />
 
         <TextView
@@ -79,6 +78,6 @@
             android:background="@drawable/rounded_button"
             android:text="@string/buy"
             android:textAllCaps="false"
-            android:textColor="@color/colorAccent" />
+            android:textColor="@color/colorPrimary" />
     </RelativeLayout>
 </androidx.cardview.widget.CardView>

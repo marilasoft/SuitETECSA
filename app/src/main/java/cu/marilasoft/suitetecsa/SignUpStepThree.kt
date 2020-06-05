@@ -14,6 +14,7 @@ import androidx.navigation.fragment.findNavController
 import cu.marilasoft.selibrary.MCPortal
 import cu.marilasoft.selibrary.utils.CommunicationException
 import cu.marilasoft.selibrary.utils.OperationException
+import cu.marilasoft.suitetecsa.utils.Communicator
 import kotlinx.android.synthetic.main.fragment_sign_up_step_three.*
 import java.security.KeyManagementException
 import java.security.NoSuchAlgorithmException
@@ -32,7 +33,6 @@ class SignUpStepThree : Fragment() {
     lateinit var phoneNumber: String
     lateinit var newPassword: String
     lateinit var sessionId: String
-    private val progressDialog = CustomProgressBar()
     private val cookies = HashMap<String, String>()
 
     override fun onCreateView(
@@ -52,7 +52,7 @@ class SignUpStepThree : Fragment() {
         btn_to_finish.setOnClickListener {
             if (isAllCorrect()) {
                 newPassword = et_new_password.text.toString()
-                RunTask().execute()
+                RunTask(mContext).execute()
             }
         }
     }
@@ -72,32 +72,11 @@ class SignUpStepThree : Fragment() {
     }
 
     @SuppressLint("StaticFieldLeak")
-    inner class RunTask : AsyncTask<Void?, Void?, Void?>() {
+    inner class RunTask(override var mContext: Context) : AsyncTask<Void?, Void?, Void?>(),
+        Communicator, MCPortal {
+        private val progressDialog = customProgressBar
         lateinit var errorMessage: String
         private var runError = false
-
-        @Throws(KeyManagementException::class, NoSuchAlgorithmException::class)
-        fun enableSSLSocket() {
-            HttpsURLConnection.setDefaultHostnameVerifier { hostname, session -> true }
-            val context = SSLContext.getInstance("TLS")
-            context.init(null, arrayOf<X509TrustManager>(object : X509TrustManager {
-
-                override fun getAcceptedIssuers(): Array<X509Certificate?> {
-                    return arrayOfNulls(0)
-                }
-
-                @SuppressLint("TrustAllX509TrustManager")
-                @Throws(CertificateException::class)
-                override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {
-                }
-
-                @SuppressLint("TrustAllX509TrustManager")
-                @Throws(CertificateException::class)
-                override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {
-                }
-            }), SecureRandom())
-            HttpsURLConnection.setDefaultSSLSocketFactory(context.socketFactory)
-        }
 
         override fun onPreExecute() {
             super.onPreExecute()
@@ -114,8 +93,7 @@ class SignUpStepThree : Fragment() {
             }
 
             try {
-                val mcPortal = MCPortal()
-                mcPortal.completeSignUp(newPassword, cookies)
+                completeSignUp(newPassword, cookies)
             } catch (e: CommunicationException) {
                 e.printStackTrace()
                 runError = true
@@ -131,17 +109,9 @@ class SignUpStepThree : Fragment() {
 
         override fun onPostExecute(result: Void?) {
             super.onPostExecute(result)
-            if (progressDialog.dialog.isShowing) {
-                progressDialog.dialog.dismiss()
-            }
-            if (runError) {
-                val builder = AlertDialog.Builder(mContext)
-                builder.setMessage(errorMessage)
-                builder.setPositiveButton("OK", null)
-                val alertDialog = builder.create()
-                alertDialog.setCancelable(false)
-                alertDialog.show()
-            } else {
+            if (progressDialog.dialog.isShowing) progressDialog.dialog.dismiss()
+            if (runError) showAlertDialog(errorMessage)
+            else {
                 val action = SignUpStepThreeDirections.signUpToResult(false, phoneNumber, newPassword, null)
                 findNavController().navigate(action)
             }

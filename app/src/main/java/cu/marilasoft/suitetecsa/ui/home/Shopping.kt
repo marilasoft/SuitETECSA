@@ -10,12 +10,12 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import cu.marilasoft.selibrary.MCPortal
 import cu.marilasoft.selibrary.models.Product
 import cu.marilasoft.selibrary.utils.CommunicationException
 import cu.marilasoft.selibrary.utils.OperationException
 import cu.marilasoft.suitetecsa.*
 import cu.marilasoft.suitetecsa.utils.Communicator
-import cu.marilasoft.suitetecsa.utils.ProductsDB
 import java.security.KeyManagementException
 import java.security.NoSuchAlgorithmException
 
@@ -26,7 +26,7 @@ class Shopping : Fragment() {
 
     lateinit var mContext: Context
     lateinit var recyclerView: RecyclerView
-    private var products = ArrayList<Product>()
+    private var productsList = ArrayList<Product>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -48,11 +48,11 @@ class Shopping : Fragment() {
 
     fun updateInterface() {
 
-        val adapter = ProductsAdapter(products)
+        val adapter = ProductsAdapter(productsList)
         recyclerView.adapter = adapter
     }
 
-    inner class RunTask(override var mContext: Context) : AsyncTask<Void?, Void?, Void?>(), Communicator {
+    inner class RunTask(override var mContext: Context) : AsyncTask<Void?, Void?, Void?>(), Communicator, MCPortal {
         private var runError = false
         private var errorMessage = ""
 
@@ -62,7 +62,9 @@ class Shopping : Fragment() {
         override fun doInBackground(vararg params: Void?): Void? {
             try {
                 enableSSLSocket()
-                products = loadProducts() as ArrayList<Product>
+                cookies["DRUTT_DSERVER_SESSIONID"] = SharedApp.prefs.sessionId
+                loadProducts(SharedApp.prefs.urlProducts, cookies)
+                productsList = products as ArrayList<Product>
             } catch (e: KeyManagementException) {
                 e.printStackTrace()
             } catch (e2: NoSuchAlgorithmException) {

@@ -1,5 +1,6 @@
 package cu.marilasoft.suitetecsa
 
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.os.AsyncTask
@@ -8,9 +9,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import cu.marilasoft.selibrary.MCPortal
 import cu.marilasoft.selibrary.utils.CommunicationException
 import cu.marilasoft.selibrary.utils.LoginException
 import cu.marilasoft.selibrary.utils.OperationException
+import cu.marilasoft.suitetecsa.utils.BuysDB
 import cu.marilasoft.suitetecsa.utils.Communicator
 import kotlinx.android.synthetic.main.fragment_sign_operation_result.*
 import java.security.KeyManagementException
@@ -18,7 +21,7 @@ import java.security.NoSuchAlgorithmException
 
 class SignOperationResult : Fragment() {
 
-    lateinit var phoneNumber: String
+    lateinit var phoneNumberInput: String
     lateinit var password: String
     lateinit var mContext: Context
     private var logged = false
@@ -36,7 +39,7 @@ class SignOperationResult : Fragment() {
         logged = SignOperationResultArgs.fromBundle(arguments!!).isLogged
         mContext = context as Context
 
-        phoneNumber = SignOperationResultArgs.fromBundle(arguments!!).phoneNumber.toString()
+        phoneNumberInput = SignOperationResultArgs.fromBundle(arguments!!).phoneNumber.toString()
         password = SignOperationResultArgs.fromBundle(arguments!!).password.toString()
 
         RunTask(mContext).execute()
@@ -44,7 +47,7 @@ class SignOperationResult : Fragment() {
 
     inner class RunTask(
         override var mContext: Context
-    ) : AsyncTask<Void?, Void?, Void?>(), Communicator {
+    ) : AsyncTask<Void?, Void?, Void?>(), Communicator, MCPortal {
         private var runError = false
         private var errorMessage = ""
 
@@ -55,9 +58,48 @@ class SignOperationResult : Fragment() {
 
         override fun doInBackground(vararg params: Void?): Void? {
             try {
-                if (!logged) login(phoneNumber, password)
-                loadMyAccount()
-                loadProducts()
+                enableSSLSocket()
+                cookies["portaluser"] = SharedApp.prefs.portalUser
+                if (!logged) {
+                    login(phoneNumberInput, password)
+                    SharedApp.prefs.portalUser = cookies["portaluser"].toString()
+                }
+
+                loadMyAccount(null, cookies, loadHomePage = true)
+                val buys = getBuys()
+                val buysDB = BuysDB(mContext, "buys", null, 1)
+                val dbBuys = buysDB.writableDatabase
+                dbBuys.delete("buys", null, null)
+                for (buy in buys) {
+                    val register = ContentValues()
+                    register.put("packageId", buy.packageId)
+                    register.put("title", buy.title)
+                    register.put("description", buy.description)
+                    register.put("dataInfo", buy.dataInfo)
+                    register.put("restData", buy.restData)
+                    register.put("percent", buy.percent)
+                    register.put("expireInDate", buy.expireInDate)
+                    register.put("expireInHours", buy.expireInHours)
+                    register.put("expireDate", buy.expireDate)
+                    dbBuys.insert("buys", null, register)
+                }
+                dbBuys.close()
+                SharedApp.prefs.sessionId = cookies["DRUTT_DSERVER_SESSIONID"].toString()
+                SharedApp.prefs.phoneNumber = phoneNumber!!
+                SharedApp.prefs.credit = credit!!.replace(" CUC", "").toFloat()
+                SharedApp.prefs.expire = expire.toString()
+                if (creditBonus != null) SharedApp.prefs.creditBonus =
+                    creditBonus!!.replace(" CUC", "").toFloat()
+                SharedApp.prefs.expireBonus = expireBonus.toString()
+                SharedApp.prefs.date = date.toString()
+                SharedApp.prefs.payableBalance = payableBalance.toString()
+                SharedApp.prefs.bonusServices = isActiveBonusServices
+                SharedApp.prefs.urlChangeBonusServices = urls["changeBonusServices"].toString()
+                SharedApp.prefs.urlProducts = urls["products"].toString()
+                SharedApp.prefs.isSubscribeFNF = familyAndFriends.isSubscribe
+                SharedApp.prefs.phoneNumberOne = familyAndFriends.phoneNumbers[0].phoneNumber
+                SharedApp.prefs.phoneNumberTwo = familyAndFriends.phoneNumbers[1].phoneNumber
+                SharedApp.prefs.phoneNumberThree = familyAndFriends.phoneNumbers[2].phoneNumber
             } catch (e: KeyManagementException) {
                 e.printStackTrace()
             } catch (e2: NoSuchAlgorithmException) {

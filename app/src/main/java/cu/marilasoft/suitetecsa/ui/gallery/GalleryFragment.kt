@@ -13,7 +13,7 @@ import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.tabs.TabLayout
 import cu.marilasoft.suitetecsa.CaptivePortal
 import cu.marilasoft.suitetecsa.R
-import cu.marilasoft.suitetecsa.UserPortal
+import cu.marilasoft.suitetecsa.SUserPortal
 
 class GalleryFragment : Fragment() {
 
@@ -42,6 +42,11 @@ class GalleryFragment : Fragment() {
         return root
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        appBar.removeView(tabs)
+    }
+
     inner class ViewPagerAdapter(fm: FragmentManager): FragmentStatePagerAdapter(fm) {
         var pageTitles =
             arrayOf("WIFI", "Portal")
@@ -49,7 +54,7 @@ class GalleryFragment : Fragment() {
         override fun getItem(position: Int): Fragment? {
             when (position) {
                 0 -> return CaptivePortal()
-                1 -> return UserPortal()
+                1 -> return SUserPortal()
             }
             return null
         }

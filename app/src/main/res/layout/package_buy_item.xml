@@ -37,7 +37,7 @@
                 app:cpb_background_progressbar_width="10dp"
                 app:cpb_progress="0"
                 app:cpb_progress_direction="to_right"
-                app:cpb_progressbar_color="@color/colorAccent"
+                app:cpb_progressbar_color="@color/colorPrimary"
                 app:cpb_progressbar_width="10dp"
                 app:cpb_round_border="false" />
 
@@ -72,26 +72,12 @@
 
         </RelativeLayout>
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/tv_buy_expire_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:orientation="horizontal">
-
-            <ImageView
-                android:id="@+id/nlte_ic_date"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:contentDescription="@string/cd_expire_date"
-                android:src="@drawable/ic_date_range_black_24dp" />
-
-            <TextView
-                android:id="@+id/tv_buy_expire_date"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
-        </LinearLayout>
+            android:drawableStart="@drawable/ic_date_range_black_14dp" />
 
         <TextView
             android:id="@+id/tv_buy_description_action"

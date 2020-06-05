@@ -2,7 +2,9 @@ package cu.marilasoft.suitetecsa.ui.home
 
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -18,10 +20,12 @@ import android.widget.ArrayAdapter
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import cu.marilasoft.selibrary.MCPortal
 import cu.marilasoft.selibrary.utils.CommunicationException
 import cu.marilasoft.selibrary.utils.OperationException
 import cu.marilasoft.suitetecsa.R
 import cu.marilasoft.suitetecsa.SharedApp
+import cu.marilasoft.suitetecsa.utils.BuysDB
 import cu.marilasoft.suitetecsa.utils.Communicator
 import kotlinx.android.synthetic.main.fragment_account_info.*
 import java.security.KeyManagementException
@@ -49,8 +53,9 @@ class AccountInfo : Fragment() {
         updateInterface()
 
         val creditToRequest = arrayOf("1", "2")
-        sp_select_mount.adapter = ArrayAdapter<String>(mContext, android.R.layout.simple_spinner_item, creditToRequest)
-        sp_select_mount.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
+        sp_select_mount.adapter =
+            ArrayAdapter(mContext, android.R.layout.simple_spinner_item, creditToRequest)
+        sp_select_mount.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onNothingSelected(parent: AdapterView<*>?) {
 
             }
@@ -97,95 +102,21 @@ class AccountInfo : Fragment() {
             RunTask(mContext, "unsubscribeFNF").execute()
         }
 
-        var isChangeOneRunning = false
-        btn_change_one.setOnClickListener {
-            val phoneNumber = et_phone_number_one.text.toString()
-            val oldPhoneNumber = SharedApp.prefs.phoneNumberOne
-            if (!isChangeOneRunning) {
-                et_phone_number_one.isEnabled = true
-                isChangeOneRunning = true
-            } else if (phoneNumber == oldPhoneNumber) et_phone_number_one.error =
-                "Introdujo el mismo numero"
-            else {
-                RunTask(
-                    mContext, "changePhoneNumberFromFNF",
-                    phoneNumber,
-                    oldPhoneNumber
-                ).execute()
-            }
-        }
-
-        var isChangeTwoRunning = false
-        btn_change_two.setOnClickListener {
-            val phoneNumber = et_phone_number_two.text.toString()
-            val oldPhoneNumber = SharedApp.prefs.phoneNumberTwo
-            if (!isChangeTwoRunning) {
-                et_phone_number_two.isEnabled = true
-                isChangeTwoRunning = true
-            } else if (phoneNumber == oldPhoneNumber) et_phone_number_two.error =
-                "Introdujo el mismo numero"
-            else {
-                RunTask(
-                    mContext, "changePhoneNumberFromFNF",
-                    phoneNumber,
-                    oldPhoneNumber
-                ).execute()
-            }
-        }
-
-        var isChangeThreeRunning = false
-        btn_change_three.setOnClickListener {
-            val phoneNumber = et_phone_number_three.text.toString()
-            val oldPhoneNumber = SharedApp.prefs.phoneNumberThree
-            if (!isChangeThreeRunning) {
-                et_phone_number_three.isEnabled = true
-                isChangeThreeRunning = true
-            } else if (phoneNumber == oldPhoneNumber) et_phone_number_three.error =
-                "Introdujo el mismo numero"
-            else {
-                RunTask(
-                    mContext, "changePhoneNumberFromFNF",
-                    phoneNumber,
-                    oldPhoneNumber
-                ).execute()
-            }
-        }
-
-        btn_delete_one.setOnClickListener {
-            RunTask(
-                mContext,
-                "deletePhoneNumberFromFNF",
-                SharedApp.prefs.phoneNumberOne
-                ).execute()
-        }
-
-        btn_delete_two.setOnClickListener {
-            RunTask(
-                mContext,
-                "deletePhoneNumberFromFNF",
-                SharedApp.prefs.phoneNumberTwo
-            ).execute()
-        }
-
-        btn_delete_three.setOnClickListener {
-            RunTask(
-                mContext,
-                "deletePhoneNumberFromFNF",
-                SharedApp.prefs.phoneNumberThree
-            ).execute()
-        }
-
-        RunTask(mContext, "loadMyAccount").execute()
+        RunTask(mContext, "loadInfo").execute()
     }
 
+    @SuppressLint("SetTextI18n")
     private fun updateInterface() {
         try {
+            tv_phone_number.text = "+53 ${SharedApp.prefs.phoneNumber}"
             tv_credit.text = toFormat(SharedApp.prefs.credit.toString())
-            tv_expire.text = "Expira: ${SharedApp.prefs.expire}"
-            if (SharedApp.prefs.creditBonus != 0.0f) tv_bonus.text =
-                "Bono: ${toFormat(SharedApp.prefs.creditBonus.toString())} - Expira: ${SharedApp.prefs.expireBonus}"
-            if (SharedApp.prefs.creditBonus != 0.0f) tv_bonus.visibility = View.VISIBLE
-            else tv_bonus.visibility = View.GONE
+            tv_expire.text = "Expira el: ${SharedApp.prefs.expire}"
+            if (SharedApp.prefs.creditBonus != 0.0f) {
+                tv_bonus.text = toFormat(SharedApp.prefs.creditBonus.toString())
+                tv_expire_bonus.text = "Expira el: ${SharedApp.prefs.expireBonus}"
+            }
+            if (SharedApp.prefs.creditBonus != 0.0f) ll_bonus.visibility = View.VISIBLE
+            else ll_bonus.visibility = View.GONE
             sw_bonus_service_state.isChecked = SharedApp.prefs.bonusServices
             if (SharedApp.prefs.date != "null") {
                 tv_loan_date.visibility = View.VISIBLE
@@ -199,20 +130,14 @@ class AccountInfo : Fragment() {
             if (phoneNumberOne != "") et_phone_number_one.setText(phoneNumberOne)
             else {
                 et_phone_number_one.isEnabled = true
-                ll_change_and_delete_one.visibility = View.INVISIBLE
-                btn_add_one.visibility = View.VISIBLE
             }
             if (phoneNumberTwo != "") et_phone_number_two.setText(phoneNumberTwo)
             else {
                 et_phone_number_two.isEnabled = true
-                ll_change_and_delete_two.visibility = View.INVISIBLE
-                btn_add_two.visibility = View.VISIBLE
             }
             if (phoneNumberThree != "") et_phone_number_three.setText(phoneNumberThree)
             else {
                 et_phone_number_three.isEnabled = true
-                ll_change_and_delete_three.visibility = View.INVISIBLE
-                btn_add_three.visibility = View.VISIBLE
             }
             if (SharedApp.prefs.isSubscribeFNF) cv_family_and_friends.visibility = View.VISIBLE
             else cv_family_and_friends.visibility = View.GONE
@@ -235,38 +160,103 @@ class AccountInfo : Fragment() {
         return "$credit CUC"
     }
 
+    @SuppressLint("StaticFieldLeak")
     inner class RunTask(
         override var mContext: Context,
         private val operation: String,
-        private val phoneNumber: String? = null,
+        private val phoneNumberInput: String? = null,
         private val oldPhoneNumber: String? = null
-    ) : AsyncTask<Void?, Void?, Void?>(), Communicator {
+    ) : AsyncTask<Void?, Void?, Void?>(), Communicator, MCPortal {
         private var runError = false
         private var errorMessage = ""
         private val progressDialog = customProgressBar
 
+        private fun loadInfo() {
+            cookies["portaluser"] = SharedApp.prefs.portalUser
+            loadMyAccount(null, cookies, loadHomePage = true)
+            SharedApp.prefs.sessionId = cookies["DRUTT_DSERVER_SESSIONID"].toString()
+            SharedApp.prefs.phoneNumber = phoneNumber!!
+            SharedApp.prefs.credit = credit!!.replace(" CUC", "").toFloat()
+            SharedApp.prefs.expire = expire.toString()
+            if (creditBonus != null) SharedApp.prefs.creditBonus =
+                creditBonus!!.replace(" CUC", "").toFloat()
+            SharedApp.prefs.expireBonus = expireBonus.toString()
+            SharedApp.prefs.date = date.toString()
+            SharedApp.prefs.payableBalance = payableBalance.toString()
+            SharedApp.prefs.bonusServices = isActiveBonusServices
+            SharedApp.prefs.urlChangeBonusServices = urls["changeBonusServices"].toString()
+            SharedApp.prefs.urlProducts = urls["products"].toString()
+            SharedApp.prefs.isSubscribeFNF = familyAndFriends.isSubscribe
+            SharedApp.prefs.phoneNumberOne = familyAndFriends.phoneNumbers[0].phoneNumber
+            SharedApp.prefs.phoneNumberTwo = familyAndFriends.phoneNumbers[1].phoneNumber
+            SharedApp.prefs.phoneNumberThree = familyAndFriends.phoneNumbers[2].phoneNumber
+            loadProducts(SharedApp.prefs.urlProducts, cookies)
+            val buys = getBuys()
+            val buysDB = BuysDB(mContext, "buys", null, 1)
+            val dbBuys = buysDB.writableDatabase
+            dbBuys.delete("buys", null, null)
+            for (buy in buys) {
+                val register = ContentValues()
+                register.put("packageId", buy.packageId)
+                register.put("title", buy.title)
+                register.put("description", buy.description)
+                register.put("dataInfo", buy.dataInfo)
+                register.put("restData", buy.restData)
+                register.put("percent", buy.percent)
+                register.put("expireInDate", buy.expireInDate)
+                register.put("expireInHours", buy.expireInHours)
+                register.put("expireDate", buy.expireDate)
+                dbBuys.insert("buys", null, register)
+            }
+            dbBuys.close()
+        }
+
         override fun onPreExecute() {
             super.onPreExecute()
-            if (operation != "loadMyAccount") progressDialog.show(mContext)
+            if (operation != "loadInfo") progressDialog.show(mContext)
         }
 
         override fun doInBackground(vararg params: Void?): Void? {
             try {
                 enableSSLSocket()
+                cookies["DRUTT_DSERVER_SESSIONID"] = SharedApp.prefs.sessionId
                 when (operation) {
-                    "loadMyAccount" -> {
-                        loadMyAccount(true)
-                        loadProducts()
-                    }
-                    "loanMe" -> loanMe(creditMount)
-                    "changeBonusServices" -> changeBonusServicesState()
-                    "unsubscribeFNF" -> unsubscribeFNF()
-                    "addPhoneNumberToFNF" -> addPhoneNumberToFNF(phoneNumber!!)
-                    "changePhoneNumberFromFNF" -> changePhoneNumberFromFNF(
-                        oldPhoneNumber!!,
-                        phoneNumber!!
+                    "loadInfo" -> loadInfo()
+                    "loanMe" -> loanMe(creditMount, SharedApp.prefs.phoneNumber, cookies)
+                    "changeBonusServices" -> changeBonusServices(
+                        SharedApp.prefs.bonusServices,
+                        SharedApp.prefs.urlChangeBonusServices, cookies
                     )
-                    "dalatePhoneNumberFromFNF" -> deletePhoneNumberFromFNF(phoneNumber!!)
+                    "unsubscribeFNF" -> {
+                        loadInfo()
+                        familyAndFriends.unsubscribe(cookies)
+                    }
+                    "addPhoneNumberToFNF" -> {
+                        loadInfo()
+                        for (number in familyAndFriends.phoneNumbers) {
+                            if (number.phoneNumber == "") {
+                                number.add(phoneNumberInput.toString(), cookies)
+                                break
+                            }
+                        }
+                    }
+                    "changePhoneNumberFromFNF" -> {
+                        loadInfo()
+                        for (number in familyAndFriends.phoneNumbers) {
+                            if (number.phoneNumber == oldPhoneNumber.toString()) number.change(
+                                phoneNumberInput.toString(),
+                                cookies
+                            )
+                        }
+                    }
+                    "dalatePhoneNumberFromFNF" -> {
+                        for (number in familyAndFriends.phoneNumbers) {
+                            if (number.phoneNumber == phoneNumberInput.toString()) number.delete(
+                                phoneNumberInput.toString(),
+                                cookies
+                            )
+                        }
+                    }
                 }
             } catch (e: KeyManagementException) {
                 e.printStackTrace()
@@ -286,11 +276,17 @@ class AccountInfo : Fragment() {
 
         override fun onPostExecute(result: Void?) {
             super.onPostExecute(result)
-            if (operation != "loadMyAccount"){
+            if (operation != "loadInfo") {
                 if (progressDialog.dialog.isShowing) progressDialog.dialog.dismiss()
             }
             if (runError) showAlertDialog(errorMessage)
-            else updateInterface()
+            else {
+                when (operation) {
+                    "changeBonusServices" -> SharedApp.prefs.bonusServices =
+                        !SharedApp.prefs.bonusServices
+                }
+                updateInterface()
+            }
         }
     }
 }

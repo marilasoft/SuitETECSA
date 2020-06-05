@@ -1,21 +1,31 @@
 package cu.marilasoft.suitetecsa
 
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.AlertDialog
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.os.AsyncTask
 import android.os.Bundle
+import android.telephony.SmsMessage
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import cu.marilasoft.selibrary.MCPortal
 import cu.marilasoft.selibrary.utils.CommunicationException
 import cu.marilasoft.selibrary.utils.OperationException
+import cu.marilasoft.suitetecsa.utils.Communicator
 import kotlinx.android.synthetic.main.fragment_sign_up_step_two.*
 import java.security.KeyManagementException
 import java.security.NoSuchAlgorithmException
@@ -34,9 +44,9 @@ class SignUpStepTwo : Fragment() {
     private val cookies = HashMap<String, String>()
     lateinit var code: String
     lateinit var mContext: Context
-    private val progressDialog = CustomProgressBar()
+    lateinit var mActivity: Activity
     lateinit var sessionId: String
-    private lateinit var phoneNumber: String
+    private lateinit var phoneNumberInput: String
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -49,13 +59,28 @@ class SignUpStepTwo : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         sessionId = SignUpStepTwoArgs.fromBundle(arguments!!).sessionId
-        phoneNumber = SignUpStepTwoArgs.fromBundle(arguments!!).phoneNumber
+        phoneNumberInput = SignUpStepTwoArgs.fromBundle(arguments!!).phoneNumber
         Log.e("JSSESIONID", sessionId)
         cookies["JSESSIONID"] = sessionId
-        Toast.makeText(context, sessionId, Toast.LENGTH_SHORT).show()
-
 
         mContext = context as Context
+        mActivity = activity as Activity
+
+        val permissionCheck = ContextCompat.checkSelfPermission(
+            mContext, Manifest.permission.RECEIVE_SMS
+        )
+        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+            Log.i("Mensaje", "No se tiene permiso para enviar SMS.")
+            ActivityCompat.requestPermissions(
+                mActivity,
+                arrayOf(Manifest.permission.RECEIVE_SMS),
+                225
+            )
+        } else {
+            val mr = MessageReceiver()
+            val filter = IntentFilter("android.provider.Telephony.SMS_RECEIVED")
+            mActivity.registerReceiver(mr, filter)
+        }
 
         btn_continue.setOnClickListener {
             var error = false
@@ -65,38 +90,17 @@ class SignUpStepTwo : Fragment() {
             }
             if (!error) {
                 code = et_code.text.toString()
-                RunTask().execute()
+                RunTask(mContext).execute()
             }
         }
     }
 
     @SuppressLint("StaticFieldLeak")
-    inner class RunTask : AsyncTask<Void?, Void?, Void?>() {
+    inner class RunTask(override var mContext: Context) : AsyncTask<Void?, Void?, Void?>(),
+    Communicator, MCPortal {
+        private val progressDialog = customProgressBar
         lateinit var errorMessage: String
         private var runError = false
-
-        @Throws(KeyManagementException::class, NoSuchAlgorithmException::class)
-        fun enableSSLSocket() {
-            HttpsURLConnection.setDefaultHostnameVerifier { hostname, session -> true }
-            val context = SSLContext.getInstance("TLS")
-            context.init(null, arrayOf<X509TrustManager>(object : X509TrustManager {
-
-                override fun getAcceptedIssuers(): Array<X509Certificate?> {
-                    return arrayOfNulls(0)
-                }
-
-                @SuppressLint("TrustAllX509TrustManager")
-                @Throws(CertificateException::class)
-                override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {
-                }
-
-                @SuppressLint("TrustAllX509TrustManager")
-                @Throws(CertificateException::class)
-                override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {
-                }
-            }), SecureRandom())
-            HttpsURLConnection.setDefaultSSLSocketFactory(context.socketFactory)
-        }
 
         override fun onPreExecute() {
             super.onPreExecute()
@@ -106,15 +110,11 @@ class SignUpStepTwo : Fragment() {
         override fun doInBackground(vararg params: Void?): Void? {
             try {
                 enableSSLSocket()
+                verifyCode(code, cookies)
             } catch (e: KeyManagementException) {
                 e.printStackTrace()
             } catch (e2: NoSuchAlgorithmException) {
                 e2.printStackTrace()
-            }
-
-            try {
-                val mcPortal = MCPortal()
-                mcPortal.verifyCode(code, cookies)
             } catch (e: CommunicationException) {
                 e.printStackTrace()
                 runError = true
@@ -130,19 +130,51 @@ class SignUpStepTwo : Fragment() {
 
         override fun onPostExecute(result: Void?) {
             super.onPostExecute(result)
-            if (progressDialog.dialog.isShowing) {
-                progressDialog.dialog.dismiss()
-            }
-            if (runError) {
-                val builder = AlertDialog.Builder(mContext)
-                builder.setMessage(errorMessage)
-                builder.setPositiveButton("OK", null)
-                val alertDialog = builder.create()
-                alertDialog.setCancelable(false)
-                alertDialog.show()
-            } else {
-                val action = SignUpStepTwoDirections.toSignUpStepThree(sessionId, phoneNumber)
+            if (progressDialog.dialog.isShowing) progressDialog.dialog.dismiss()
+            if (runError) showAlertDialog(errorMessage)
+            else {
+                val action = SignUpStepTwoDirections.toSignUpStepThree(sessionId, phoneNumberInput)
                 findNavController().navigate(action)
+            }
+        }
+    }
+
+    inner class MessageReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val bundle = intent.extras
+            if (bundle != null) {
+                val permissionCheck = ContextCompat.checkSelfPermission(
+                    mContext, Manifest.permission.READ_SMS
+                )
+                if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+                    Log.i("Mensaje", "No se tiene permiso para enviar SMS.")
+                    ActivityCompat.requestPermissions(
+                        mActivity,
+                        arrayOf(Manifest.permission.READ_SMS),
+                        224
+                    )
+                } else {
+                    val sms = bundle["pdus"] as Array<Any>?
+                    for (i in sms!!.indices) {
+                        val message: SmsMessage =
+                            SmsMessage.createFromPdu(sms[i] as ByteArray)
+                        val numero: String = message.displayOriginatingAddress
+                        Log.e("Numero: ", numero)
+                        val messageText: String = message.messageBody.toString()
+                        Log.e("Message: ", messageText)
+                        if (numero == "Cubacel") {
+                            code = messageText.split("CODIGO MiCubacel: ")[1]
+                            Log.e("Code: ", code)
+                            try {
+                                et_code.setText(code)
+                                et_code.isEnabled = false
+                                RunTask(mContext).execute()
+                            } catch (e: NullPointerException) {
+                                Log.e("Error", e.message.toString())
+                            }
+                        }
+                    }
+                }
             }
         }
     }

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".UserPortal">
+    tools:context=".SUserPortal">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -39,6 +39,7 @@
                     app:boxCornerRadiusTopStart="5dp">
 
                     <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_user_name"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="@string/user_name"
@@ -64,6 +65,7 @@
                     app:boxCornerRadiusTopStart="5dp">
 
                     <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_password"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="@string/password"
@@ -115,6 +117,7 @@
                     app:boxCornerRadiusTopStart="5dp">
 
                     <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_captcha_code"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="@string/captcha_code"
@@ -122,7 +125,7 @@
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <Button
-                    android:id="@+id/button4"
+                    android:id="@+id/btn_sign_in"
                     style="@style/Widget.AppCompat.Button.Borderless.Colored"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
